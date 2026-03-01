@@ -154,6 +154,7 @@
     grid-template-rows: repeat(8, var(--sq));
     border: 1px solid var(--stone-dark);
     cursor: default;
+    position: relative;
   }
 
   .cell {
@@ -604,6 +605,200 @@
   .sides-row .side-indicator { flex: 1; }
   .side-indicator.active { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,162,39,0.12); }
 
+  /* ── PIECE SLIDE ANIMATION ── */
+  .piece-ghost {
+    position: absolute;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    z-index: 20;
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .piece-ghost.white {
+    background: radial-gradient(circle at 35% 30%, #f5e090, #c9a227 60%, #8a6e1a);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
+    border: 2px solid rgba(201,162,39,0.5);
+  }
+  .piece-ghost.black {
+    background: radial-gradient(circle at 35% 30%, #d04040, #8b1a1a 60%, #4a0808);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.6), inset 0 -2px 4px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,100,100,0.15);
+    border: 2px solid rgba(139,26,26,0.6);
+  }
+  .piece-ghost::after {
+    content: '';
+    width: 18px; height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    top: 10px; left: 10px;
+    transform: rotate(-30deg);
+  }
+  .piece-ghost.white::after { background: rgba(255,255,255,0.25); }
+  .piece-ghost.black::after { background: rgba(255,150,150,0.15); }
+
+  /* ── CAPTURE BURST PARTICLES ── */
+  .capture-burst {
+    position: absolute;
+    width: var(--sq); height: var(--sq);
+    pointer-events: none;
+    z-index: 15;
+  }
+  .burst-particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    animation: burstOut 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .burst-particle.gold  { background: #e8c96d; box-shadow: 0 0 6px #c9a227; }
+  .burst-particle.red   { background: #e74c3c; box-shadow: 0 0 6px #8b1a1a; }
+  .burst-particle.ember { background: #ff9944; box-shadow: 0 0 4px #cc6600; }
+  @keyframes burstOut {
+    0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(0); opacity: 0; }
+  }
+
+  /* ── CAPTURE FLASH ── */
+  .capture-flash {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    pointer-events: none;
+    z-index: 14;
+    animation: capFlash 0.35s ease-out forwards;
+  }
+  @keyframes capFlash {
+    0%   { background: rgba(255,200,50,0.5); }
+    100% { background: transparent; }
+  }
+
+  /* ── SCREEN SHAKE ── */
+  .board-shake {
+    animation: shakeBoard 0.35s ease-out;
+  }
+  @keyframes shakeBoard {
+    0%, 100% { transform: translate(0,0); }
+    15%  { transform: translate(-4px, 2px); }
+    30%  { transform: translate(3px, -3px); }
+    45%  { transform: translate(-2px, 3px); }
+    60%  { transform: translate(3px, -1px); }
+    75%  { transform: translate(-1px, 2px); }
+  }
+
+  /* ── SVG MOVE ARROW ── */
+  .move-arrow-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    overflow: visible;
+  }
+  .move-arrow-svg line {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: drawArrow 0.35s ease-out forwards;
+  }
+  .move-arrow-svg polygon {
+    opacity: 0;
+    animation: fadeArrowHead 0.15s 0.25s ease-out forwards;
+  }
+  @keyframes drawArrow {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes fadeArrowHead {
+    to { opacity: 0.7; }
+  }
+
+  /* ── CHOOSE SIDE ── */
+  .side-toggle {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .side-toggle-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    min-width: 60px;
+  }
+  .side-btn {
+    flex: 1;
+    padding: 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .side-btn:hover { border-color: var(--gold-dim); }
+  .side-btn.active { background: rgba(201,162,39,0.1); border-color: var(--gold); color: var(--gold-light); }
+
+  /* ── PUZZLE MODE ── */
+  .puzzle-header {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .puzzle-objective {
+    font-size: 14px;
+    color: var(--cream);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: var(--bg3);
+    border-left: 3px solid var(--gold-dim);
+  }
+  .puzzle-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .puzzle-nav-btn {
+    flex: 1;
+    padding: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .puzzle-nav-btn:hover { border-color: var(--gold-dim); color: var(--cream-dim); }
+  .puzzle-nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .puzzle-progress {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+  }
+  .puzzle-solved {
+    padding: 12px;
+    background: rgba(30,120,50,0.12);
+    border: 1px solid rgba(46,125,50,0.4);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: #a8d8a8;
+    margin-top: 8px;
+    animation: fadeSlide 0.3s ease;
+  }
+
   /* responsive */
   @media (max-width: 820px) {
     .app { flex-direction: column; align-items: center; }
@@ -614,6 +809,8 @@
     .board-container { --sq: 44px; }
     .piece { width: 36px; height: 36px; }
     .piece::after { width: 13px; height: 7px; }
+    .piece-ghost { width: 36px; height: 36px; }
+    .piece-ghost::after { width: 13px; height: 7px; }
   }
 </style>
 </head>
@@ -644,9 +841,10 @@
       <div class="thinking-bar" id="thinking-bar"></div>
       <div style="display:flex">
         <div class="board-coords-left" id="coords-left"></div>
-        <div>
+        <div style="position:relative">
           <div class="board-coords-top" id="coords-top"></div>
-          <div id="board"></div>
+          <div id="board" style="position:relative"></div>
+          <svg class="move-arrow-svg" id="move-arrow" style="position:absolute;top:0;left:0;pointer-events:none"></svg>
         </div>
       </div>
     </div>
@@ -660,10 +858,13 @@
     <!-- MODE -->
     <div class="panel-card">
       <div class="card-title">Mode</div>
-      <div class="mode-tabs" style="grid-template-columns:repeat(5,1fr)">
+      <div class="mode-tabs" style="grid-template-columns:repeat(3,1fr)">
         <button class="mode-btn active" data-mode="spar"    onclick="setMode('spar')">⚔ Spar</button>
         <button class="mode-btn"        data-mode="hint"    onclick="setMode('hint')">💡 Hint</button>
         <button class="mode-btn"        data-mode="learn"   onclick="setMode('learn')">📜 Learn</button>
+      </div>
+      <div class="mode-tabs" style="grid-template-columns:repeat(3,1fr);margin-top:4px">
+        <button class="mode-btn"        data-mode="puzzle"  onclick="setMode('puzzle')">🧩 Puzzle</button>
         <button class="mode-btn"        data-mode="explain" onclick="setMode('explain')">🔎 Explain</button>
         <button class="mode-btn"        data-mode="review"  onclick="setMode('review')">📋 Review</button>
       </div>
@@ -678,6 +879,11 @@
         <button class="diff-btn" data-d="2" onclick="setDepth(2)">Soldier</button>
         <button class="diff-btn" data-d="3" onclick="setDepth(3)">Tribune</button>
         <button class="diff-btn" data-d="4" onclick="setDepth(4)">Praetor</button>
+      </div>
+      <div class="side-toggle" id="side-toggle">
+        <span class="side-toggle-label">Play as</span>
+        <button class="side-btn active" data-s="W" onclick="setPlayerSide('W')">White</button>
+        <button class="side-btn" data-s="B" onclick="setPlayerSide('B')">Black</button>
       </div>
     </div>
 
@@ -699,10 +905,25 @@
       <div class="history-list" id="history-list"></div>
     </div>
 
+    <!-- PUZZLE PANEL (shown in puzzle mode) -->
+    <div class="panel-card hidden" id="puzzle-card">
+      <div class="card-title">Puzzle</div>
+      <div class="puzzle-header" id="puzzle-title"></div>
+      <div class="puzzle-objective" id="puzzle-objective"></div>
+      <div id="puzzle-feedback"></div>
+      <div class="puzzle-nav">
+        <button class="puzzle-nav-btn" id="puzzle-prev" onclick="puzzleNav(-1)">← Prev</button>
+        <button class="puzzle-nav-btn" id="puzzle-reset" onclick="loadPuzzle(currentPuzzle)">Reset</button>
+        <button class="puzzle-nav-btn" id="puzzle-next" onclick="puzzleNav(1)">Next →</button>
+      </div>
+      <div class="puzzle-progress" id="puzzle-progress"></div>
+    </div>
+
     <!-- CONTROLS -->
     <div class="panel-card">
       <div class="card-title">Controls</div>
       <button class="btn" onclick="newGame()">New Game</button>
+      <button class="btn" onclick="undoMove()" id="undo-btn" style="border-color:var(--stone-mid);color:var(--cream-dim)">Undo Move</button>
       <button class="btn danger" onclick="resign()">Resign</button>
     </div>
 
@@ -1118,6 +1339,13 @@ function renderState() {
       if (dangerHighlights.has(r+','+c)) {
         cell.classList.add('danger-sq');
       }
+      // last move highlight
+      if (history.length > 0 && mode !== 'explain') {
+        const last = history[history.length - 1];
+        if ((last.src[0]===r && last.src[1]===c) || (last.dst[0]===r && last.dst[1]===c)) {
+          cell.classList.add('last-move');
+        }
+      }
 
       // legal targets
       const isTarget = legalCache.some(m => m.dst[0]===r && m.dst[1]===c);
@@ -1167,33 +1395,8 @@ function clearCoach() {
 }
 
 function addHistory(player, src, dst, caps) {
-  const h = document.getElementById('history-list');
-  const idx = history.length - 1; // index of this move in history[]
-  if (history.length % 2 === 1) {
-    // odd entry = first move of a pair → new row
-    const pair = Math.ceil(history.length / 2);
-    const row = document.createElement('div');
-    row.className = 'history-item';
-    row.id = `hrow-${idx}`;
-    row.dataset.idx = idx;
-    row.innerHTML = `<span class="h-num">${pair}.</span><span class="h-${player.toLowerCase()}">${formatCoord(src)}→${formatCoord(dst)}${caps?` ×${caps}`:''}</span>`;
-    row.addEventListener('click', () => onHistoryClick(idx, row));
-    h.appendChild(row);
-  } else {
-    // even entry = second move of a pair → append to previous row
-    const prevRow = document.getElementById(`hrow-${idx-1}`);
-    if (prevRow) {
-      const sp = document.createElement('span');
-      sp.className = `h-${player.toLowerCase()}`;
-      sp.style.cursor = 'pointer';
-      sp.textContent = ` ${formatCoord(src)}→${formatCoord(dst)}${caps?` ×${caps}`:''}`;
-      sp.dataset.idx = idx;
-      sp.addEventListener('click', (e) => { e.stopPropagation(); onHistoryClick(idx, prevRow); });
-      prevRow.appendChild(sp);
-    }
-  }
-  h.scrollTop = h.scrollHeight;
-  refreshHistoryClickable();
+  const idx = history.length - 1;
+  addHistoryEntry(player, src, dst, caps, idx);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1341,8 +1544,10 @@ function explainMove(idx) {
 //  INTERACTION
 // ════════════════════════════════════════════════════════════════
 function onCellClick(r, c) {
+  if (animating) return;
   if (gameOver) return;
-  if (state.toMove === aiSide && mode === 'spar') return; // AI's turn
+  if (mode === 'puzzle' && puzzleSolved) return;
+  if (state.toMove === aiSide && (mode === 'spar' || mode === 'hint')) return; // AI's turn
 
   const board = state.board;
 
@@ -1378,53 +1583,92 @@ function onCellClick(r, c) {
 }
 
 function doMove(src, dst) {
+  if (animating) return;
   const player = state.toMove;
-  const danger = getDangerSquares(state, player);
   const stateBefore = { board: cloneBoard(state.board), toMove: state.toMove };
+  const moveObj = {src, dst};
 
-  const {state: ns, captures} = applyMove(state, {src, dst});
+  const {state: ns, captures} = applyMove(state, moveObj);
 
   // Check if destination is now in danger
   const dangerAfterNew = getDangerSquares(ns, player);
   const walkedInDanger = dangerAfterNew.has(dst[0]+','+dst[1]);
 
-  stateHistory.push(stateBefore);
-  history.push({player, src, dst, captures, walkedInDanger, stateBefore});
-  totalCaps += captures;
-  moveNum++;
+  // Puzzle mode check (before committing state)
+  const puzzleResult = {state: ns, captures};
 
-  state = ns;
+  // Find captured squares for animation
+  const capSquares = [];
+  for (let r=0;r<SIZE;r++)
+    for (let c=0;c<SIZE;c++)
+      if (stateBefore.board[r][c]===opponent(player) && ns.board[r][c]===EMPTY)
+        capSquares.push([r,c]);
+
+  // Hide the source piece immediately (ghost replaces it)
+  const srcCell = document.getElementById(`cell-${src[0]}-${src[1]}`);
+  const srcPiece = srcCell ? srcCell.querySelector('.piece') : null;
+  if (srcPiece) srcPiece.style.visibility = 'hidden';
+
   selected = null;
   legalCache = [];
 
-  addHistory(player, src, dst, captures);
+  // Play move sound
+  playMoveSound();
 
-  renderState();
+  // Animate the slide
+  const pieceClass = player === WHITE ? 'white' : 'black';
+  animateSlide(src, dst, pieceClass, () => {
+    // Commit state after animation completes
+    stateHistory.push(stateBefore);
+    history.push({player, src, dst, captures, walkedInDanger, stateBefore});
+    totalCaps += captures;
+    moveNum++;
+    state = ns;
 
-  // Coach analysis for hint/learn modes
-  if (mode === 'hint' || mode === 'learn') {
-    const msgs = coachTurnAnalysis(state);
-    msgs.forEach(m => addCoachMsg(m));
-    if (!msgs.length && mode==='hint') {
-      addCoachMsg({type:'info', text:'Position looks balanced. Think ahead 2 moves.'});
+    // Draw move arrow
+    drawMoveArrow(src, dst);
+
+    addHistory(player, src, dst, captures);
+    renderState();
+
+    // Capture effects
+    if (captures > 0) {
+      playCaptureSound(captures);
+      capSquares.forEach(([r,c]) => spawnCaptureBurst(r, c, opponent(player)));
+      if (captures >= 2) shakeBoard();
     }
-  }
 
-  // Check win
-  const w = winner(state);
-  if (w !== null) {
-    endGame(w);
-    return;
-  }
+    // Puzzle mode validation
+    if (mode === 'puzzle') {
+      checkPuzzleSolution(moveObj, puzzleResult);
+      return; // don't do AI or coach in puzzle mode
+    }
 
-  // AI turn
-  if (state.toMove === aiSide && (mode==='spar'||mode==='hint')) {
-    setTimeout(doAIMove, 400);
-  }
+    // Coach analysis for hint/learn modes
+    if (mode === 'hint' || mode === 'learn') {
+      const msgs = coachTurnAnalysis(state);
+      msgs.forEach(m => addCoachMsg(m));
+      if (!msgs.length && mode==='hint') {
+        addCoachMsg({type:'info', text:'Position looks balanced. Think ahead 2 moves.'});
+      }
+    }
+
+    // Check win
+    const w = winner(state);
+    if (w !== null) {
+      endGame(w);
+      return;
+    }
+
+    // AI turn
+    if (state.toMove === aiSide && (mode==='spar'||mode==='hint')) {
+      setTimeout(doAIMove, 400);
+    }
+  });
 }
 
 function doAIMove() {
-  if (gameOver) return;
+  if (gameOver || animating) return;
   const bar = document.getElementById('thinking-bar');
   bar.classList.add('active');
   setTimeout(() => {
@@ -1437,6 +1681,7 @@ function doAIMove() {
 
 function endGame(w) {
   gameOver = true;
+  playVictorySound();
   renderState();
   const events = generateReview(history);
   reviewLog = events;
@@ -1518,14 +1763,17 @@ function buildLessons() {
 
 function setMode(m) {
   mode = m;
+  puzzleActive = (m === 'puzzle');
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode===m));
 
   const diffCard    = document.getElementById('diff-card');
   const coachCard   = document.getElementById('coach-card');
   const lessonsCard = document.getElementById('lessons-card');
+  const puzzleCard  = document.getElementById('puzzle-card');
 
   diffCard.style.display    = (m==='spar'||m==='hint') ? '' : 'none';
   lessonsCard.style.display = (m==='learn') ? '' : 'none';
+  puzzleCard.style.display  = (m==='puzzle') ? '' : 'none';
 
   clearCoach();
   if (m==='learn') {
@@ -1535,7 +1783,9 @@ function setMode(m) {
     addCoachMsg({type:'info', text:'Hint mode active. Danger squares glow red. Coach will warn before risky moves.'});
     renderState(); // re-render to show danger squares
   } else if (m==='spar') {
-    addCoachMsg({type:'info', text:`Playing vs AI at depth ${aiDepth}. You play White.`});
+    addCoachMsg({type:'info', text:`Playing vs AI at depth ${aiDepth}. You play ${aiSide === BLACK ? 'White' : 'Black'}.`});
+  } else if (m==='puzzle') {
+    loadPuzzle(currentPuzzle);
   } else if (m==='explain') {
     explainActive = null;
     refreshHistoryClickable();
@@ -1554,6 +1804,7 @@ function setMode(m) {
     m==='spar'    ? 'Battle Log' :
     m==='hint'    ? 'Coach' :
     m==='learn'   ? 'Tutor' :
+    m==='puzzle'  ? 'Puzzle Coach' :
     m==='explain' ? 'Move Explainer' :
                     'After-Action Review';
 }
@@ -1570,6 +1821,7 @@ function setDepth(d) {
 //  GAME CONTROLS
 // ════════════════════════════════════════════════════════════════
 function newGame() {
+  if (mode === 'puzzle') { loadPuzzle(currentPuzzle); return; }
   state    = makeState(initialBoard(), WHITE);
   selected = null;
   legalCache = [];
@@ -1580,13 +1832,14 @@ function newGame() {
   explainActive = null;
   moveNum    = 0;
   totalCaps  = 0;
+  clearMoveArrow();
   document.getElementById('win-overlay').classList.add('hidden');
   document.getElementById('history-list').innerHTML = '';
   clearCoach();
   addCoachMsg({type:'info', text:'A new battle begins. White moves first.'});
   if (mode==='hint') addCoachMsg({type:'lesson', text:PRINCIPLES.captureGeometry});
   renderState();
-  // If AI plays White (uncommon but possible):
+  // If AI plays White:
   if (state.toMove === aiSide && (mode==='spar'||mode==='hint')) setTimeout(doAIMove, 600);
 }
 
@@ -1595,6 +1848,552 @@ function resign() {
   const loser = state.toMove;
   const w     = opponent(loser);
   endGame(w);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SOUND ENGINE (Web Audio API — no external files)
+// ════════════════════════════════════════════════════════════════
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playMoveSound() {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+function playCaptureSound(count) {
+  try {
+    const ctx = getAudioCtx();
+    // metallic clang
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600 + count * 200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.25);
+    // impact noise burst
+    const bufSize = ctx.sampleRate * 0.06;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i/bufSize);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.08 * count, ctx.currentTime);
+    ng.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    noise.connect(ng); ng.connect(ctx.destination);
+    noise.start(ctx.currentTime); noise.stop(ctx.currentTime + 0.06);
+  } catch(e) {}
+}
+
+function playVictorySound() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + i * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.4);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.4);
+    });
+  } catch(e) {}
+}
+
+function playPuzzleSolvedSound() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [392, 493.88, 587.33]; // G4 B4 D5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + i * 0.1 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+    });
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+//  ANIMATION ENGINE
+// ════════════════════════════════════════════════════════════════
+let animating = false;
+
+function getCellCenter(r, c) {
+  const cell = document.getElementById(`cell-${r}-${c}`);
+  if (!cell) return {x:0,y:0};
+  const rect = cell.getBoundingClientRect();
+  return { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
+}
+
+function getCellOffset(r, c) {
+  const cell = document.getElementById(`cell-${r}-${c}`);
+  if (!cell) return {x:0,y:0};
+  return { x: cell.offsetLeft, y: cell.offsetTop };
+}
+
+function animateSlide(src, dst, pieceClass, callback) {
+  animating = true;
+  const boardEl = document.getElementById('board');
+  const sqSize = boardEl.querySelector('.cell').offsetWidth;
+
+  const ghost = document.createElement('div');
+  ghost.className = `piece-ghost ${pieceClass}`;
+
+  const srcOff = getCellOffset(src[0], src[1]);
+  const dstOff = getCellOffset(dst[0], dst[1]);
+
+  const centerOff = (sqSize - 52) / 2;
+  ghost.style.position = 'absolute';
+  ghost.style.left = (srcOff.x + centerOff) + 'px';
+  ghost.style.top = (srcOff.y + centerOff) + 'px';
+  ghost.style.transform = 'translate(0,0)';
+
+  boardEl.appendChild(ghost);
+
+  // force reflow
+  ghost.offsetWidth;
+
+  const dx = dstOff.x - srcOff.x;
+  const dy = dstOff.y - srcOff.y;
+  ghost.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  ghost.addEventListener('transitionend', () => {
+    ghost.remove();
+    animating = false;
+    if (callback) callback();
+  }, {once: true});
+
+  // fallback timeout in case transitionend doesn't fire
+  setTimeout(() => {
+    if (ghost.parentNode) { ghost.remove(); animating = false; if (callback) callback(); }
+  }, 350);
+}
+
+function spawnCaptureBurst(r, c, color) {
+  const cell = document.getElementById(`cell-${r}-${c}`);
+  if (!cell) return;
+  const burst = document.createElement('div');
+  burst.className = 'capture-burst';
+
+  const particleCount = 12;
+  const colors = color === WHITE ? ['gold','ember','gold'] : ['red','ember','red'];
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.4;
+    const dist = 20 + Math.random() * 25;
+    p.className = 'burst-particle ' + colors[i % colors.length];
+    p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+    p.style.animationDelay = (Math.random() * 0.05) + 's';
+    burst.appendChild(p);
+  }
+
+  // flash
+  const flash = document.createElement('div');
+  flash.className = 'capture-flash';
+  cell.appendChild(flash);
+  cell.appendChild(burst);
+
+  setTimeout(() => { burst.remove(); flash.remove(); }, 600);
+}
+
+function shakeBoard() {
+  const container = document.querySelector('.board-container');
+  container.classList.remove('board-shake');
+  container.offsetWidth; // force reflow
+  container.classList.add('board-shake');
+  container.addEventListener('animationend', () => container.classList.remove('board-shake'), {once:true});
+}
+
+// ════════════════════════════════════════════════════════════════
+//  MOVE ARROW
+// ════════════════════════════════════════════════════════════════
+let lastMoveArrow = null; // {src, dst}
+
+function drawMoveArrow(src, dst) {
+  lastMoveArrow = {src, dst};
+  const svg = document.getElementById('move-arrow');
+  if (!svg) return;
+  const boardEl = document.getElementById('board');
+  const sqSize = boardEl.querySelector('.cell').offsetWidth;
+  const coordsTop = document.getElementById('coords-top');
+  const topOffset = coordsTop ? coordsTop.offsetHeight : 0;
+
+  svg.style.top = topOffset + 'px';
+  svg.style.width = (sqSize * SIZE) + 'px';
+  svg.style.height = (sqSize * SIZE) + 'px';
+
+  const x1 = src[1] * sqSize + sqSize/2;
+  const y1 = src[0] * sqSize + sqSize/2;
+  const x2 = dst[1] * sqSize + sqSize/2;
+  const y2 = dst[0] * sqSize + sqSize/2;
+
+  // shorten by 8px at the end so arrowhead sits cleanly
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx*dx+dy*dy);
+  const ux = dx/len, uy = dy/len;
+  const ex = x2 - ux*12, ey = y2 - uy*12;
+
+  // arrowhead
+  const headSize = 8;
+  const px = ux*headSize, py = uy*headSize;
+  const ax = x2 - px + py*0.6, ay = y2 - py - px*0.6;
+  const bx = x2 - px - py*0.6, by = y2 - py + px*0.6;
+
+  svg.innerHTML = `
+    <line x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}"
+          stroke="rgba(201,162,39,0.55)" stroke-width="3" stroke-linecap="round"/>
+    <polygon points="${x2},${y2} ${ax},${ay} ${bx},${by}"
+             fill="rgba(201,162,39,0.7)"/>
+  `;
+}
+
+function clearMoveArrow() {
+  lastMoveArrow = null;
+  const svg = document.getElementById('move-arrow');
+  if (svg) svg.innerHTML = '';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  UNDO MOVE
+// ════════════════════════════════════════════════════════════════
+function undoMove() {
+  if (gameOver || mode === 'puzzle') return;
+  if (history.length === 0) return;
+
+  // In spar/hint modes, undo both player and AI moves
+  let undoCount = 1;
+  if ((mode === 'spar' || mode === 'hint') && history.length >= 2) {
+    undoCount = 2; // undo AI move + player move
+  }
+
+  for (let i = 0; i < undoCount && history.length > 0; i++) {
+    const last = history.pop();
+    stateHistory.pop();
+    totalCaps -= last.captures;
+    moveNum--;
+  }
+
+  // Restore state
+  if (stateHistory.length > 0) {
+    const lastState = history[history.length - 1];
+    state = lastState ? applyMove(lastState.stateBefore, {src: lastState.src, dst: lastState.dst}).state : makeState(initialBoard(), WHITE);
+  } else {
+    state = makeState(initialBoard(), WHITE);
+  }
+
+  selected = null;
+  legalCache = [];
+  clearMoveArrow();
+
+  // Rebuild history display
+  document.getElementById('history-list').innerHTML = '';
+  for (let i = 0; i < history.length; i++) {
+    const h = history[i];
+    addHistoryEntry(h.player, h.src, h.dst, h.captures, i);
+  }
+
+  renderState();
+  addCoachMsg({type:'info', text:'Move undone.'});
+}
+
+// Separate history rendering from history recording
+function addHistoryEntry(player, src, dst, caps, idx) {
+  const h = document.getElementById('history-list');
+  if (idx % 2 === 0) {
+    const pair = Math.floor(idx / 2) + 1;
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    row.id = `hrow-${idx}`;
+    row.dataset.idx = idx;
+    row.innerHTML = `<span class="h-num">${pair}.</span><span class="h-${player.toLowerCase()}">${formatCoord(src)}→${formatCoord(dst)}${caps?` ×${caps}`:''}</span>`;
+    row.addEventListener('click', () => onHistoryClick(idx, row));
+    h.appendChild(row);
+  } else {
+    const prevRow = document.getElementById(`hrow-${idx-1}`);
+    if (prevRow) {
+      const sp = document.createElement('span');
+      sp.className = `h-${player.toLowerCase()}`;
+      sp.style.cursor = 'pointer';
+      sp.textContent = ` ${formatCoord(src)}→${formatCoord(dst)}${caps?` ×${caps}`:''}`;
+      sp.dataset.idx = idx;
+      sp.addEventListener('click', (e) => { e.stopPropagation(); onHistoryClick(idx, prevRow); });
+      prevRow.appendChild(sp);
+    }
+  }
+  h.scrollTop = h.scrollHeight;
+  refreshHistoryClickable();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CHOOSE SIDE
+// ════════════════════════════════════════════════════════════════
+function setPlayerSide(s) {
+  const playerSide = s;
+  aiSide = opponent(playerSide);
+  document.querySelectorAll('.side-btn').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+  newGame();
+  addCoachMsg({type:'info', text:`You are now playing as ${playerSide === WHITE ? 'White' : 'Black'}.`});
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PUZZLE MODE
+// ════════════════════════════════════════════════════════════════
+const PUZZLES = [
+  {
+    // W at (2,2) anchor, B at (2,3), W at (2,7) slides left to (2,4) to sandwich B
+    title: 'Puzzle 1: First Blood',
+    objective: 'Capture the black piece in one move. Complete the sandwich!',
+    board: [
+      '........',
+      '........',
+      '..WB...W',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      return result.captures >= 1;
+    }
+  },
+  {
+    // W at (3,4) anchor north, B at (4,4), W at (7,4) slides up to (5,4) to sandwich B
+    title: 'Puzzle 2: The Sandwich',
+    objective: 'Complete the vertical sandwich to capture the black piece.',
+    board: [
+      '........',
+      '........',
+      '........',
+      '....W...',
+      '....B...',
+      '........',
+      '........',
+      '....W...',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      return result.captures >= 1;
+    }
+  },
+  {
+    // W anchors at (1,3) and (5,3). B targets at (2,3) and (4,3). W at (3,0) slides to (3,3) for fork
+    title: 'Puzzle 3: Double Strike',
+    objective: 'Find the fork — capture 2 pieces in a single move!',
+    board: [
+      '........',
+      '...W....',
+      '...B....',
+      'W.......',
+      '...B....',
+      '...W....',
+      '........',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      return result.captures >= 2;
+    }
+  },
+  {
+    // B at (2,3) and (5,3) threaten W at (4,3). B at (2,3) can move to (3,3) to capture.
+    title: 'Puzzle 4: Avoid the Trap',
+    objective: 'Your piece at d4 is in danger! Move it somewhere safe.',
+    board: [
+      '........',
+      '........',
+      '...B....',
+      '........',
+      '...W....',
+      '...B....',
+      '........',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      if (move.src[0] !== 4 || move.src[1] !== 3) return false;
+      const dangerAfter = getDangerSquares(result.state, WHITE);
+      return !dangerAfter.has(move.dst[0]+','+move.dst[1]);
+    }
+  },
+  {
+    // W anchors at (1,3),(5,3),(3,5). B targets at (2,3),(4,3),(3,4). W at (3,0) to (3,3) for triple
+    title: 'Puzzle 5: Triple Threat',
+    objective: 'Find the devastating move that captures 3 pieces at once.',
+    board: [
+      '........',
+      '...W....',
+      '...B....',
+      'W...BW..',
+      '...B....',
+      '...W....',
+      '........',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      return result.captures >= 3;
+    }
+  },
+  {
+    // B at (5,1). W walls at (4,1) and (6,1). W at (5,4) slides left to (5,2) to cage B
+    title: 'Puzzle 6: Herding',
+    objective: 'Cage the black piece — reduce its mobility below 3 moves.',
+    board: [
+      '........',
+      '........',
+      '........',
+      '........',
+      '.W......',
+      '.B..W...',
+      '.W......',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      const blackMoves = legalMoves(result.state, BLACK);
+      return blackMoves.length < 3;
+    }
+  },
+  {
+    // B at (2,3) and (5,3) threaten W at (3,3). Must move W at (3,3) to safety.
+    title: 'Puzzle 7: Escape Artist',
+    objective: 'Your piece at d5 is about to be captured! Escape to safety.',
+    board: [
+      '........',
+      '........',
+      '...B....',
+      '...W....',
+      '........',
+      '...B....',
+      '........',
+      '........',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      if (move.src[0] !== 3 || move.src[1] !== 3) return false;
+      const dangerAfter = getDangerSquares(result.state, WHITE);
+      return !dangerAfter.has(move.dst[0]+','+move.dst[1]);
+    }
+  },
+  {
+    title: 'Puzzle 8: Wall of Death',
+    objective: 'Seal the gate — trap and capture the black piece in the corner.',
+    board: [
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+      'W.......',
+      'BW......',
+      '.W......',
+    ],
+    toMove: WHITE,
+    validate: function(st, move, result) {
+      const blackMoves = legalMoves(result.state, BLACK);
+      return blackMoves.length === 0 || result.captures >= 1;
+    }
+  },
+];
+
+let currentPuzzle = 0;
+let puzzleActive = false;
+let puzzleSolved = false;
+
+function parsePuzzleBoard(lines) {
+  const board = [];
+  for (const line of lines) {
+    const row = [];
+    for (const ch of line) {
+      if (ch === 'W') row.push(WHITE);
+      else if (ch === 'B') row.push(BLACK);
+      else row.push(EMPTY);
+    }
+    board.push(row);
+  }
+  return board;
+}
+
+function loadPuzzle(idx) {
+  if (idx < 0 || idx >= PUZZLES.length) return;
+  currentPuzzle = idx;
+  puzzleActive = true;
+  puzzleSolved = false;
+  const p = PUZZLES[idx];
+
+  state = makeState(parsePuzzleBoard(p.board), p.toMove);
+  selected = null;
+  legalCache = [];
+  gameOver = false;
+  history = [];
+  stateHistory = [];
+  moveNum = 0;
+  totalCaps = 0;
+  clearMoveArrow();
+
+  document.getElementById('puzzle-title').textContent = p.title;
+  document.getElementById('puzzle-objective').textContent = p.objective;
+  document.getElementById('puzzle-feedback').innerHTML = '';
+  document.getElementById('puzzle-progress').textContent = `${idx + 1} / ${PUZZLES.length}`;
+  document.getElementById('puzzle-prev').disabled = idx === 0;
+  document.getElementById('puzzle-next').disabled = idx === PUZZLES.length - 1;
+  document.getElementById('history-list').innerHTML = '';
+  document.getElementById('win-overlay').classList.add('hidden');
+
+  clearCoach();
+  addCoachMsg({type:'lesson', text: p.objective});
+
+  renderState();
+}
+
+function puzzleNav(dir) {
+  const next = currentPuzzle + dir;
+  if (next >= 0 && next < PUZZLES.length) loadPuzzle(next);
+}
+
+function checkPuzzleSolution(move, result) {
+  if (!puzzleActive || puzzleSolved) return;
+  const p = PUZZLES[currentPuzzle];
+  if (p.validate(state, move, result)) {
+    puzzleSolved = true;
+    playPuzzleSolvedSound();
+    document.getElementById('puzzle-feedback').innerHTML = '<div class="puzzle-solved">Solved! Well done, Legionary.</div>';
+    addCoachMsg({type:'good', text:'Correct! You found the right move.'});
+  } else {
+    addCoachMsg({type:'warn', text:'Not quite — try again. Click Reset to retry.'});
+    // auto-reset after a moment
+    setTimeout(() => { if (!puzzleSolved) loadPuzzle(currentPuzzle); }, 1200);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
