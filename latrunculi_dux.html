@@ -939,13 +939,13 @@ function bracketing(board, player) {
   let threats = 0;
   for (let r=0;r<SIZE;r++) {
     for (let c=0;c<SIZE;c++) {
-      if (board[r][c]!==enemy) continue;
+      if (pieceOwner(board[r][c])!==enemy) continue;
       for (const [dr,dc] of DIRS) {
         const ar=r-dr, ac=c-dc; // one side
         const br=r+dr, bc=c+dc; // other side
         if (!inBounds(ar,ac)||!inBounds(br,bc)) continue;
-        if (board[ar][ac]===player && board[br][bc]===EMPTY) threats++;
-        if (board[ar][ac]===EMPTY && board[br][bc]===player) threats++;
+        if (pieceOwner(board[ar][ac])===player && board[br][bc]===EMPTY) threats++;
+        if (board[ar][ac]===EMPTY && pieceOwner(board[br][bc])===player) threats++;
       }
     }
   }
@@ -960,7 +960,7 @@ function trappedPieces(st, player) {
   let trapped = 0;
   for (let r=0;r<SIZE;r++)
     for (let c=0;c<SIZE;c++)
-      if (st.board[r][c]===player && (srcSet[r+','+c]||0) <= 1) trapped++;
+      if (pieceOwner(st.board[r][c])===player && (srcSet[r+','+c]||0) <= 1) trapped++;
   return trapped;
 }
 
@@ -973,7 +973,7 @@ function duxSurroundCount(board, side) {
       let count = 0;
       for (const [dr,dc] of DIRS) {
         const nr=r+dr, nc=c+dc;
-        if (!inBounds(nr,nc) || isEnemy(board[nr][nc], side)) count++;
+        if (inBounds(nr,nc) && isEnemy(board[nr][nc], side)) count++;
       }
       return count;
     }
@@ -1068,7 +1068,7 @@ function getDangerSquares(st, player) {
     // find pieces player lost
     for (let r=0;r<SIZE;r++) {
       for (let c=0;c<SIZE;c++) {
-        if (st.board[r][c]===player && ns.board[r][c]!==player) {
+        if (pieceOwner(st.board[r][c])===player && pieceOwner(ns.board[r][c])!==player) {
           dangerous.add(r+','+c);
         }
       }
@@ -1143,6 +1143,7 @@ function coachTurnAnalysis(st) {
   if (oppDuxDgr === 3) {
     msgs.push({type:'good', text:`⚜ Enemy Dux is surrounded on 3 of 4 sides — one more piece in position captures the commander!`});
   }
+  const danger = getDangerSquares(st, side);
   if (danger.size) {
     const coordStr = [...danger].map(k => { const [r,c] = k.split(','); return formatCoord([+r,+c]); }).join(', ');
     msgs.push({type:'warn', text: `⚠ Pieces at ${coordStr} are in danger of being captured!`});
@@ -1352,7 +1353,7 @@ function showExplainBoard(h) {
   const capSquares = [];
   for (let r=0;r<SIZE;r++)
     for (let c=0;c<SIZE;c++)
-      if (sb.board[r][c]===enemy && ns.board[r][c]===EMPTY)
+      if (pieceOwner(sb.board[r][c])===enemy && ns.board[r][c]===EMPTY)
         capSquares.push([r,c]);
 
   // Clear all explain highlights first
@@ -1367,7 +1368,15 @@ function showExplainBoard(h) {
       const cell = document.getElementById(`cell-${r}-${c}`);
       if (sb.board[r][c] !== EMPTY) {
         const pc = document.createElement('div');
-        pc.className = 'piece ' + (sb.board[r][c]===WHITE?'white':'black');
+        const owner = pieceOwner(sb.board[r][c]);
+        const dux = isDux(sb.board[r][c]);
+        pc.className = 'piece ' + (owner===WHITE?'white':'black') + (dux?' dux':'');
+        if (dux) {
+          const crown = document.createElement('span');
+          crown.className = 'crown';
+          crown.textContent = owner===WHITE ? '\u2658' : '\u265E';
+          pc.appendChild(crown);
+        }
         cell.appendChild(pc);
       }
     }
@@ -1407,7 +1416,7 @@ function explainMove(idx) {
       const ar=dr+drow, ac=dc+dcol;
       const br=dr+2*drow, bc=dc+2*dcol;
       if (!inBounds(ar,ac)||!inBounds(br,bc)) continue;
-      if (sb.board[ar][ac]===opponent(h.player) && sb.board[br][bc]===h.player) {
+      if (pieceOwner(sb.board[ar][ac])===opponent(h.player) && pieceOwner(sb.board[br][bc])===h.player) {
         capDir = drow!==0 ? (drow>0?'south':'north') : (dcol>0?'east':'west');
         addCoachMsg({type:'good', text:`✦ Custodial capture to the ${capDir}: the piece at ${formatCoord([ar,ac])} was sandwiched between ${dstStr} and the anchor at ${formatCoord([br,bc])}. Classic bracket geometry.`});
         break;
@@ -1482,7 +1491,7 @@ function onCellClick(r, c) {
       return;
     }
     // clicking own piece: reselect
-    if (board[r][c] === state.toMove) {
+    if (pieceOwner(board[r][c]) === state.toMove) {
       selected = [r,c];
       legalCache = legalMoves(state, state.toMove).filter(m => m.src[0]===r && m.src[1]===c);
       renderState();
@@ -1494,7 +1503,7 @@ function onCellClick(r, c) {
     return;
   }
 
-  if (board[r][c] === state.toMove) {
+  if (pieceOwner(board[r][c]) === state.toMove) {
     selected = [r,c];
     legalCache = legalMoves(state, state.toMove).filter(m => m.src[0]===r && m.src[1]===c);
     renderState();
