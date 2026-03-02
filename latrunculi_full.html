@@ -312,30 +312,33 @@
 
   /* ── GLADIATOR (diamond) piece ── */
   .piece.gladiator {
-    border-radius: 4px;
+    border-radius: 3px;
     transform: rotate(45deg);
-    width: 44px; height: 44px;
+    width: 34px; height: 34px;
+    border-width: 2px;
   }
+  .piece.gladiator::after { display: none; }
   .piece.gladiator:hover  { transform: rotate(45deg) translateY(-2px); }
-  .piece.gladiator.selected-piece { transform: rotate(45deg) translateY(-4px) scale(1.1); }
+  .piece.gladiator.selected-piece { transform: rotate(45deg) translateY(-4px) scale(1.12); }
   .piece.gladiator .glyph {
     transform: rotate(-45deg);
-    font-size: 16px;
+    font-size: 14px;
     position: absolute;
     top: 50%; left: 50%;
     translate: -50% -50%;
     pointer-events: none;
     z-index: 3;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
   }
   .piece.white.gladiator {
-    background: radial-gradient(circle at 35% 30%, #f8eca0, #b8860b 60%, #6b4e0a);
-    box-shadow: 2px 3px 8px rgba(0,0,0,0.7), 0 0 10px rgba(200,160,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.3);
-    border-color: rgba(255,220,80,0.6);
+    background: radial-gradient(circle at 35% 30%, #f5e090, #c9a227 60%, #8a6e1a);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.6), 0 0 8px rgba(200,160,0,0.25), inset 0 -2px 3px rgba(0,0,0,0.3);
+    border-color: rgba(201,162,39,0.5);
   }
   .piece.black.gladiator {
-    background: radial-gradient(circle at 35% 30%, #e06060, #6b0f0f 60%, #3a0505);
-    box-shadow: 2px 3px 8px rgba(0,0,0,0.7), 0 0 10px rgba(160,30,30,0.3), inset 0 -2px 4px rgba(0,0,0,0.4);
-    border-color: rgba(220,80,80,0.6);
+    background: radial-gradient(circle at 35% 30%, #d04040, #8b1a1a 60%, #4a0808);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.6), 0 0 8px rgba(160,30,30,0.25), inset 0 -2px 3px rgba(0,0,0,0.4);
+    border-color: rgba(139,26,26,0.6);
   }
 
   /* ── VARIANT SELECTOR ── */
@@ -731,16 +734,140 @@
   .sides-row .side-indicator { flex: 1; }
   .side-indicator.active { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,162,39,0.12); }
 
+  /* ── PIECE SLIDE ANIMATION ── */
+  .piece.sliding {
+    position: fixed;
+    z-index: 100;
+    pointer-events: none;
+    transition: left 0.28s cubic-bezier(0.25,0.1,0.25,1), top 0.28s cubic-bezier(0.25,0.1,0.25,1);
+  }
+
+  /* ── CAPTURE FLASH ── */
+  .cell.capture-flash {
+    animation: capFlash 0.4s ease-out;
+  }
+  @keyframes capFlash {
+    0%   { box-shadow: inset 0 0 0 0 rgba(255,80,40,0.9); }
+    30%  { box-shadow: inset 0 0 30px 8px rgba(255,80,40,0.7); }
+    100% { box-shadow: inset 0 0 0 0 rgba(255,80,40,0); }
+  }
+
+  /* ── CAPTURE PARTICLE ── */
+  .capture-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 150;
+    border-radius: 50%;
+    animation: particleBurst 0.6s ease-out forwards;
+  }
+  @keyframes particleBurst {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0); }
+  }
+
+  /* ── SCREEN SHAKE ── */
+  .board-shake {
+    animation: shake 0.3s ease-out;
+  }
+  @keyframes shake {
+    0%   { transform: translate(0,0); }
+    15%  { transform: translate(-4px, 2px); }
+    30%  { transform: translate(3px, -3px); }
+    45%  { transform: translate(-2px, 1px); }
+    60%  { transform: translate(2px, -1px); }
+    75%  { transform: translate(-1px, 1px); }
+    100% { transform: translate(0,0); }
+  }
+
+  /* ── MOVE ARROW SVG ── */
+  .move-arrow-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── LAST MOVE HIGHLIGHT ── */
+  .cell.last-from { box-shadow: inset 0 0 0 2px rgba(100,160,255,0.35); }
+  .cell.last-to   { box-shadow: inset 0 0 0 2px rgba(100,200,100,0.35); }
+
+  /* ── NEW PIECE APPEAR ── */
+  .piece.piece-appear {
+    animation: pieceAppear 0.35s ease-out;
+  }
+  @keyframes pieceAppear {
+    0%   { transform: scale(0) rotate(180deg); opacity: 0; }
+    60%  { transform: scale(1.15) rotate(-10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .piece.gladiator.piece-appear {
+    animation: gladAppear 0.35s ease-out;
+  }
+  @keyframes gladAppear {
+    0%   { transform: rotate(45deg) scale(0); opacity: 0; }
+    60%  { transform: rotate(45deg) scale(1.15); opacity: 1; }
+    100% { transform: rotate(45deg) scale(1); opacity: 1; }
+  }
+
+  /* ── UNDO BUTTON ── */
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; margin-top: 8px; }
+
+  /* ── CHOOSE SIDE ── */
+  .side-chooser {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .side-btn {
+    flex: 1;
+    padding: 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .side-btn:hover { border-color: var(--gold-dim); }
+  .side-btn.active { background: rgba(201,162,39,0.1); border-color: var(--gold); color: var(--gold-light); }
+
+  /* ── TORCHLIGHT BOARD ── */
+  #board {
+    position: relative;
+  }
+  #board::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,0.12) 100%);
+    z-index: 1;
+  }
+
   /* responsive */
   @media (max-width: 820px) {
     .app { flex-direction: column; align-items: center; }
     .panel { max-width: 544px; width: 100%; }
     .board-container { --sq: 58px; }
+    .piece { width: 44px; height: 44px; }
+    .piece.dux { width: 48px; height: 48px; }
+    .piece.gladiator { width: 30px; height: 30px; }
   }
   @media (max-width: 520px) {
     .board-container { --sq: 44px; }
     .piece { width: 36px; height: 36px; }
     .piece::after { width: 13px; height: 7px; }
+    .piece.dux { width: 38px; height: 38px; }
+    .piece.gladiator { width: 24px; height: 24px; }
+    .piece.dux .crown { font-size: 14px; }
+    .piece.gladiator .glyph { font-size: 10px; }
   }
 </style>
 </head>
@@ -773,7 +900,9 @@
         <div class="board-coords-left" id="coords-left"></div>
         <div>
           <div class="board-coords-top" id="coords-top"></div>
-          <div id="board"></div>
+          <div id="board">
+            <svg class="move-arrow-svg" id="move-arrow-svg"></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -840,7 +969,14 @@
     <!-- CONTROLS -->
     <div class="panel-card">
       <div class="card-title">Controls</div>
-      <button class="btn" onclick="newGame()">New Game</button>
+      <div class="side-chooser">
+        <button class="side-btn active" id="side-w" onclick="chooseSide('W')">Play White</button>
+        <button class="side-btn" id="side-b" onclick="chooseSide('B')">Play Black</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="newGame()">New Game</button>
+        <button class="btn" onclick="undoMove()">Undo</button>
+      </div>
       <button class="btn danger" onclick="resign()">Resign</button>
     </div>
 
@@ -1110,13 +1246,13 @@ function bracketing(board, player) {
   let threats = 0;
   for (let r=0;r<SIZE;r++) {
     for (let c=0;c<SIZE;c++) {
-      if (board[r][c]!==enemy) continue;
+      if (pieceOwner(board[r][c])!==enemy) continue;
       for (const [dr,dc] of DIRS) {
         const ar=r-dr, ac=c-dc; // one side
         const br=r+dr, bc=c+dc; // other side
         if (!inBounds(ar,ac)||!inBounds(br,bc)) continue;
-        if (board[ar][ac]===player && board[br][bc]===EMPTY) threats++;
-        if (board[ar][ac]===EMPTY && board[br][bc]===player) threats++;
+        if (pieceOwner(board[ar][ac])===player && board[br][bc]===EMPTY) threats++;
+        if (board[ar][ac]===EMPTY && pieceOwner(board[br][bc])===player) threats++;
       }
     }
   }
@@ -1131,12 +1267,13 @@ function trappedPieces(st, player) {
   let trapped = 0;
   for (let r=0;r<SIZE;r++)
     for (let c=0;c<SIZE;c++)
-      if (st.board[r][c]===player && (srcSet[r+','+c]||0) <= 1) trapped++;
+      if (pieceOwner(st.board[r][c])===player && (srcSet[r+','+c]||0) <= 1) trapped++;
   return trapped;
 }
 
 function duxSurroundCount(board, side) {
   // How many of the Dux's 4 sides are occupied by enemies? (0-4, -1 if no Dux)
+  // Board edges do NOT count — only actual enemy pieces
   const duxPiece = side === WHITE ? WHITE_DUX : BLACK_DUX;
   for (let r=0;r<SIZE;r++) {
     for (let c=0;c<SIZE;c++) {
@@ -1144,7 +1281,7 @@ function duxSurroundCount(board, side) {
       let count = 0;
       for (const [dr,dc] of DIRS) {
         const nr=r+dr, nc=c+dc;
-        if (!inBounds(nr,nc) || isEnemy(board[nr][nc], side)) count++;
+        if (inBounds(nr,nc) && isEnemy(board[nr][nc], side)) count++;
       }
       return count;
     }
@@ -1171,11 +1308,30 @@ function evaluate(st, perspective) {
   const oppDuxDanger = duxSurroundCount(st.board, opponent(perspective));
   const duxScore = (oppDuxDanger - myDuxDanger) * 40;  // pressure enemy Dux, protect ours
 
+  // Gladiator value: they're worth slightly more due to diagonal coverage
+  let gladBonus = 0;
+  if (gameVariant === 'gladiator' || gameVariant === 'full') {
+    let myGlads = 0, oppGlads = 0;
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+      if (isGladiator(st.board[r][c])) {
+        if (pieceOwner(st.board[r][c]) === perspective) myGlads++;
+        else oppGlads++;
+      }
+    }
+    gladBonus = (myGlads - oppGlads) * 20; // extra value for gladiators
+    // Center control bonus for gladiators
+    for (let r=2;r<=5;r++) for (let c=2;c<=5;c++) {
+      if (isGladiator(st.board[r][c]) && pieceOwner(st.board[r][c])===perspective) gladBonus += 5;
+      if (isGladiator(st.board[r][c]) && pieceOwner(st.board[r][c])===opponent(perspective)) gladBonus -= 5;
+    }
+  }
+
   return (myMat - oppMat) * 100
        + (myMob - oppMob) * 5
        + (myBrk - oppBrk) * 15
        + (oppTrap - myTrap) * 8
-       + duxScore;
+       + duxScore
+       + gladBonus;
 }
 
 function minimax(st, depth, alpha, beta, maximizing, perspective) {
@@ -1239,7 +1395,7 @@ function getDangerSquares(st, player) {
     // find pieces player lost
     for (let r=0;r<SIZE;r++) {
       for (let c=0;c<SIZE;c++) {
-        if (st.board[r][c]===player && ns.board[r][c]!==player) {
+        if (pieceOwner(st.board[r][c])===player && pieceOwner(ns.board[r][c])!==player) {
           dangerous.add(r+','+c);
         }
       }
@@ -1314,6 +1470,7 @@ function coachTurnAnalysis(st) {
   if (oppDuxDgr === 3) {
     msgs.push({type:'good', text:`⚜ Enemy Dux is surrounded on 3 of 4 sides — one more piece in position captures the commander!`});
   }
+  const danger = getDangerSquares(st, side);
   if (danger.size) {
     const coordStr = [...danger].map(k => { const [r,c] = k.split(','); return formatCoord([+r,+c]); }).join(', ');
     msgs.push({type:'warn', text: `⚠ Pieces at ${coordStr} are in danger of being captured!`});
@@ -1365,6 +1522,8 @@ function buildBoard() {
     leftEl.appendChild(d);
   }
 
+  // Preserve the SVG arrow overlay
+  const svgEl = document.getElementById('move-arrow-svg');
   boardEl.innerHTML = '';
   for (let r=0;r<SIZE;r++) {
     for (let c=0;c<SIZE;c++) {
@@ -1377,6 +1536,7 @@ function buildBoard() {
       boardEl.appendChild(cell);
     }
   }
+  if (svgEl) boardEl.appendChild(svgEl);
 }
 
 let dangerHighlights = new Set();
@@ -1401,6 +1561,11 @@ function renderState() {
       }
       if (dangerHighlights.has(r+','+c)) {
         cell.classList.add('danger-sq');
+      }
+      // last move highlights
+      if (lastMove) {
+        if (lastMove.src[0]===r && lastMove.src[1]===c) cell.classList.add('last-from');
+        if (lastMove.dst[0]===r && lastMove.dst[1]===c) cell.classList.add('last-to');
       }
 
       // legal targets
@@ -1532,7 +1697,7 @@ function showExplainBoard(h) {
   const capSquares = [];
   for (let r=0;r<SIZE;r++)
     for (let c=0;c<SIZE;c++)
-      if (sb.board[r][c]===enemy && ns.board[r][c]===EMPTY)
+      if (pieceOwner(sb.board[r][c])===enemy && ns.board[r][c]===EMPTY)
         capSquares.push([r,c]);
 
   // Clear all explain highlights first
@@ -1545,9 +1710,26 @@ function showExplainBoard(h) {
   for (let r=0;r<SIZE;r++) {
     for (let c=0;c<SIZE;c++) {
       const cell = document.getElementById(`cell-${r}-${c}`);
-      if (sb.board[r][c] !== EMPTY) {
+      const p = sb.board[r][c];
+      if (p !== EMPTY) {
         const pc = document.createElement('div');
-        pc.className = 'piece ' + (sb.board[r][c]===WHITE?'white':'black');
+        const owner = pieceOwner(p);
+        let cls = 'piece ' + (owner===WHITE?'white':'black');
+        if (isDux(p))       cls += ' dux';
+        if (isGladiator(p)) cls += ' gladiator';
+        pc.className = cls;
+        if (isDux(p)) {
+          const crown = document.createElement('span');
+          crown.className = 'crown';
+          crown.textContent = owner===WHITE ? '\u2658' : '\u265E';
+          pc.appendChild(crown);
+        }
+        if (isGladiator(p)) {
+          const glyph = document.createElement('span');
+          glyph.className = 'glyph';
+          glyph.textContent = '\u25C6';
+          pc.appendChild(glyph);
+        }
         cell.appendChild(pc);
       }
     }
@@ -1587,7 +1769,7 @@ function explainMove(idx) {
       const ar=dr+drow, ac=dc+dcol;
       const br=dr+2*drow, bc=dc+2*dcol;
       if (!inBounds(ar,ac)||!inBounds(br,bc)) continue;
-      if (sb.board[ar][ac]===opponent(h.player) && sb.board[br][bc]===h.player) {
+      if (pieceOwner(sb.board[ar][ac])===opponent(h.player) && pieceOwner(sb.board[br][bc])===h.player) {
         capDir = drow!==0 ? (drow>0?'south':'north') : (dcol>0?'east':'west');
         addCoachMsg({type:'good', text:`✦ Custodial capture to the ${capDir}: the piece at ${formatCoord([ar,ac])} was sandwiched between ${dstStr} and the anchor at ${formatCoord([br,bc])}. Classic bracket geometry.`});
         break;
@@ -1662,7 +1844,7 @@ function onCellClick(r, c) {
       return;
     }
     // clicking own piece: reselect
-    if (board[r][c] === state.toMove) {
+    if (pieceOwner(board[r][c]) === state.toMove) {
       selected = [r,c];
       legalCache = legalMoves(state, state.toMove).filter(m => m.src[0]===r && m.src[1]===c);
       renderState();
@@ -1674,9 +1856,10 @@ function onCellClick(r, c) {
     return;
   }
 
-  if (board[r][c] === state.toMove) {
+  if (pieceOwner(board[r][c]) === state.toMove) {
     selected = [r,c];
     legalCache = legalMoves(state, state.toMove).filter(m => m.src[0]===r && m.src[1]===c);
+    playSelect();
     renderState();
   }
 }
@@ -1684,6 +1867,10 @@ function onCellClick(r, c) {
 function doMove(src, dst, aiControlled=false) {
   const player = state.toMove;
   const stateBefore = { board: cloneBoard(state.board), toMove: state.toMove };
+
+  // Get the piece element before the board changes
+  const srcCell = document.getElementById(`cell-${src[0]}-${src[1]}`);
+  const pieceEl = srcCell ? srcCell.querySelector('.piece') : null;
 
   const {state: ns, captures, promotionSquare} = applyMove(state, {src, dst});
 
@@ -1694,49 +1881,92 @@ function doMove(src, dst, aiControlled=false) {
   history.push({player, src, dst, captures, walkedInDanger, stateBefore});
   totalCaps += captures;
   moveNum++;
+  lastMove = {src, dst};
 
   addHistory(player, src, dst, captures);
 
-  // Handle Gladiator promotion
-  if (promotionSquare && (gameVariant==='gladiator'||gameVariant==='full')) {
-    if (aiControlled) {
-      // AI always promotes
-      const promoted = cloneBoard(ns.board);
-      const [pr,pc] = promotionSquare;
-      promoted[pr][pc] = player === WHITE ? WHITE_GLAD : BLACK_GLAD;
-      state = makeState(promoted, ns.toMove);
-    } else {
-      // Human gets to choose — pause game
-      pendingPromotion = { square: promotionSquare, nextState: ns, player };
-      state = ns; // apply move first so board renders
-      selected = null; legalCache = [];
-      renderState();
-      document.getElementById('promo-sub').textContent =
-        `Your piece at ${formatCoord(promotionSquare)} captured an enemy Gladiator. Forge it into a Gladiator warrior?`;
-      document.getElementById('promo-overlay').classList.remove('hidden');
-      return; // wait for resolvePromotion
-    }
+  // Sound effects
+  if (captures > 0) {
+    playCapture();
   } else {
-    state = ns;
+    playMove();
   }
 
-  selected = null;
-  legalCache = [];
-  renderState();
-
-  if (mode === 'hint' || mode === 'learn') {
-    const msgs = coachTurnAnalysis(state);
-    msgs.forEach(m => addCoachMsg(m));
-    if (!msgs.length && mode==='hint') {
-      addCoachMsg({type:'info', text:'Position looks balanced. Think ahead 2 moves.'});
+  // Find captured squares for effects
+  const capturedCells = [];
+  for (let r=0;r<SIZE;r++) {
+    for (let c=0;c<SIZE;c++) {
+      if (stateBefore.board[r][c] !== EMPTY && ns.board[r][c] === EMPTY && !(r===src[0] && c===src[1])) {
+        capturedCells.push([r,c]);
+      }
     }
   }
 
-  const w = winner(state);
-  if (w !== null) { endGame(w); return; }
+  // Finalize the move with effects
+  const finishMove = () => {
+    // Handle Gladiator promotion
+    if (promotionSquare && (gameVariant==='gladiator'||gameVariant==='full')) {
+      if (aiControlled) {
+        const promoted = cloneBoard(ns.board);
+        const [pr,pc] = promotionSquare;
+        promoted[pr][pc] = player === WHITE ? WHITE_GLAD : BLACK_GLAD;
+        state = makeState(promoted, ns.toMove);
+      } else {
+        pendingPromotion = { square: promotionSquare, nextState: ns, player };
+        state = ns;
+        selected = null; legalCache = [];
+        renderState();
+        document.getElementById('promo-sub').textContent =
+          `Your piece at ${formatCoord(promotionSquare)} captured an enemy Gladiator. Forge it into a Gladiator warrior?`;
+        document.getElementById('promo-overlay').classList.remove('hidden');
+        return;
+      }
+    } else {
+      state = ns;
+    }
 
-  if (state.toMove === aiSide && (mode==='spar'||mode==='hint')) {
-    setTimeout(doAIMove, 400);
+    selected = null;
+    legalCache = [];
+    renderState();
+
+    // Capture visual effects
+    if (captures > 0) {
+      screenShake();
+      capturedCells.forEach(([r,c]) => {
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        if (cell) {
+          cell.classList.add('capture-flash');
+          const capOwner = pieceOwner(stateBefore.board[r][c]);
+          spawnCaptureParticles(cell, capOwner === WHITE ? 'white' : 'black');
+          setTimeout(() => cell.classList.remove('capture-flash'), 400);
+        }
+      });
+    }
+
+    // Draw last-move arrow
+    drawMoveArrow(src, dst);
+
+    if (mode === 'hint' || mode === 'learn') {
+      const msgs = coachTurnAnalysis(state);
+      msgs.forEach(m => addCoachMsg(m));
+      if (!msgs.length && mode==='hint') {
+        addCoachMsg({type:'info', text:'Position looks balanced. Think ahead 2 moves.'});
+      }
+    }
+
+    const w = winner(state);
+    if (w !== null) { endGame(w); return; }
+
+    if (state.toMove === aiSide && (mode==='spar'||mode==='hint')) {
+      setTimeout(doAIMove, 400);
+    }
+  };
+
+  // Animate piece slide, then finish
+  if (pieceEl) {
+    animateSlide(src, dst, pieceEl, finishMove);
+  } else {
+    finishMove();
   }
 }
 
@@ -1781,6 +2011,7 @@ function doAIMove() {
 
 function endGame(w) {
   gameOver = true;
+  playGameOver();
   renderState();
   const events = generateReview(history);
   reviewLog = events;
@@ -1841,6 +2072,14 @@ const LESSONS = [
   {
     title: 'Lesson 6: Endgame Technique',
     body:  'In the endgame: reduce mobility first, then herd remaining pieces, then convert to forced captures. Piece exhaustion or total immobility both win the game.'
+  },
+  {
+    title: 'Lesson 7: The Dux Commander',
+    body:  'The Dux is immune to normal custodial capture. It can only be taken when ALL 4 orthogonal sides are occupied by enemy pieces. Board edges do not count. Use your Dux aggressively — it cannot be cheaply traded. But beware encirclement.'
+  },
+  {
+    title: 'Lesson 8: Gladiator Tactics',
+    body:  'Gladiators move diagonally like bishops. They capture enemy Gladiators by diagonal sandwich only. Rounds can capture Gladiators orthogonally and earn a promotion. Use Gladiators to control diagonals and block enemy sliding paths.'
   },
 ];
 
@@ -1931,10 +2170,12 @@ function newGame() {
   pendingPromotion = null;
   moveNum    = 0;
   totalCaps  = 0;
+  lastMove = null;
   document.getElementById('win-overlay').classList.add('hidden');
   document.getElementById('promo-overlay').classList.add('hidden');
   document.getElementById('history-list').innerHTML = '';
   clearCoach();
+  clearMoveArrow();
 
   const variantNames = {standard:'Standard',dux:'Dux',gladiator:'Gladiator',full:'Full (Dux + Gladiator)'};
   addCoachMsg({type:'info', text:`New battle: ${variantNames[gameVariant]}. White moves first.`});
@@ -1955,6 +2196,262 @@ function resign() {
   const loser = state.toMove;
   const w     = opponent(loser);
   endGame(w);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  WEB AUDIO — SOUND EFFECTS
+// ════════════════════════════════════════════════════════════════
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playMove() {
+  try {
+    const ctx = ensureAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+function playCapture() {
+  try {
+    const ctx = ensureAudio();
+    // Impact noise
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.03));
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 800;
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    src.start(ctx.currentTime);
+    // Low thud
+    const osc = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc.connect(g2); g2.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
+    g2.gain.setValueAtTime(0.2, ctx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function playSelect() {
+  try {
+    const ctx = ensureAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+  } catch(e) {}
+}
+
+function playGameOver() {
+  try {
+    const ctx = ensureAudio();
+    const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.15;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.1, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t);
+      osc.stop(t + 0.4);
+    });
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+//  VISUAL EFFECTS — PARTICLES, SHAKE, ARROWS
+// ════════════════════════════════════════════════════════════════
+function spawnCaptureParticles(cellEl, color) {
+  const rect = cellEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = color === 'white'
+    ? ['#f5e090','#c9a227','#e8c96d','#ffe4a0','#8a6e1a']
+    : ['#e06060','#8b1a1a','#c0392b','#ff7070','#4a0808'];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'capture-particle';
+    const angle = (Math.PI * 2 / 12) * i + (Math.random() - 0.5) * 0.5;
+    const dist = 30 + Math.random() * 40;
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist;
+    const size = 3 + Math.random() * 5;
+    p.style.cssText = `
+      left: ${cx - size/2}px; top: ${cy - size/2}px;
+      width: ${size}px; height: ${size}px;
+      background: ${colors[i % colors.length]};
+      --px: ${px}px; --py: ${py}px;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 600);
+  }
+}
+
+function screenShake() {
+  const board = document.getElementById('board');
+  board.classList.remove('board-shake');
+  void board.offsetWidth; // force reflow
+  board.classList.add('board-shake');
+  setTimeout(() => board.classList.remove('board-shake'), 300);
+}
+
+let lastMove = null; // {src, dst} for last-move highlights
+
+function drawMoveArrow(src, dst) {
+  const svg = document.getElementById('move-arrow-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+  const sq = parseFloat(getComputedStyle(document.querySelector('.board-container')).getPropertyValue('--sq'));
+  const x1 = src[1] * sq + sq/2;
+  const y1 = src[0] * sq + sq/2;
+  const x2 = dst[1] * sq + sq/2;
+  const y2 = dst[0] * sq + sq/2;
+  // Arrow line
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+  line.setAttribute('stroke', 'rgba(100,180,255,0.4)');
+  line.setAttribute('stroke-width', '3');
+  line.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(line);
+  // Arrowhead
+  const angle = Math.atan2(y2-y1, x2-x1);
+  const headLen = 10;
+  const head = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  const hx1 = x2 - headLen * Math.cos(angle - Math.PI/6);
+  const hy1 = y2 - headLen * Math.sin(angle - Math.PI/6);
+  const hx2 = x2 - headLen * Math.cos(angle + Math.PI/6);
+  const hy2 = y2 - headLen * Math.sin(angle + Math.PI/6);
+  head.setAttribute('points', `${x2},${y2} ${hx1},${hy1} ${hx2},${hy2}`);
+  head.setAttribute('fill', 'rgba(100,180,255,0.5)');
+  svg.appendChild(head);
+}
+
+function clearMoveArrow() {
+  const svg = document.getElementById('move-arrow-svg');
+  if (svg) svg.innerHTML = '';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PIECE SLIDING ANIMATION
+// ════════════════════════════════════════════════════════════════
+function animateSlide(src, dst, piece, callback) {
+  const srcCell = document.getElementById(`cell-${src[0]}-${src[1]}`);
+  const dstCell = document.getElementById(`cell-${dst[0]}-${dst[1]}`);
+  if (!srcCell || !dstCell || !piece) { callback(); return; }
+
+  const srcRect = srcCell.getBoundingClientRect();
+  const dstRect = dstCell.getBoundingClientRect();
+
+  // Clone piece for animation
+  const clone = piece.cloneNode(true);
+  clone.classList.add('sliding');
+  clone.style.left = (srcRect.left + srcRect.width/2 - piece.offsetWidth/2) + 'px';
+  clone.style.top  = (srcRect.top + srcRect.height/2 - piece.offsetHeight/2) + 'px';
+  clone.style.width  = piece.offsetWidth + 'px';
+  clone.style.height = piece.offsetHeight + 'px';
+  document.body.appendChild(clone);
+
+  // Hide original
+  piece.style.visibility = 'hidden';
+
+  requestAnimationFrame(() => {
+    clone.style.left = (dstRect.left + dstRect.width/2 - piece.offsetWidth/2) + 'px';
+    clone.style.top  = (dstRect.top + dstRect.height/2 - piece.offsetHeight/2) + 'px';
+  });
+
+  setTimeout(() => {
+    clone.remove();
+    callback();
+  }, 300);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  UNDO & CHOOSE SIDE
+// ════════════════════════════════════════════════════════════════
+function undoMove() {
+  if (stateHistory.length < 2 || gameOver) return; // undo both AI and player move
+  // Pop AI move
+  stateHistory.pop(); history.pop();
+  // Pop player move
+  const prev = stateHistory.pop(); history.pop();
+  state = makeState(prev.board, prev.toMove);
+  moveNum = Math.max(0, moveNum - 2);
+  selected = null;
+  legalCache = [];
+  lastMove = null;
+  clearMoveArrow();
+  renderState();
+  // Rebuild history display
+  const h = document.getElementById('history-list');
+  // Remove last two entries from display
+  const items = h.querySelectorAll('.history-item');
+  if (items.length) items[items.length-1].remove();
+  addCoachMsg({type:'info', text:'Move undone. Your turn again.'});
+}
+
+function chooseSide(side) {
+  aiSide = side === 'W' ? BLACK : WHITE;
+  document.getElementById('side-w').classList.toggle('active', side === 'W');
+  document.getElementById('side-b').classList.toggle('active', side === 'B');
+  newGame();
+  addCoachMsg({type:'info', text:`You play as ${side==='W'?'White':'Black'}. ${side==='B'?'AI moves first.':''}`});
+}
+
+// ════════════════════════════════════════════════════════════════
+//  ENHANCED AI EVALUATION — Gladiator awareness
+// ════════════════════════════════════════════════════════════════
+function gladiatorMobility(st, player) {
+  let mob = 0;
+  for (let r=0;r<SIZE;r++) {
+    for (let c=0;c<SIZE;c++) {
+      const p = st.board[r][c];
+      if (!isGladiator(p) || pieceOwner(p) !== player) continue;
+      for (const [dr,dc] of DIAG_DIRS) {
+        let nr=r+dr, nc=c+dc;
+        while (inBounds(nr,nc) && st.board[nr][nc]===EMPTY) {
+          mob++;
+          nr+=dr; nc+=dc;
+        }
+      }
+    }
+  }
+  return mob;
 }
 
 // ════════════════════════════════════════════════════════════════
