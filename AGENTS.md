@@ -24,35 +24,46 @@ Capture: custodial capture. After a move, any adjacent enemy piece is captured i
          orthogonally (N/S or E/W). Multiple captures may occur from one move.
 Win: opponent has 0 pieces OR opponent has 0 legal moves.
 
-## Repo Structure (target)
-latrunculi/
-  __init__.py
-  rules.py        # board state, move gen, capture resolution
-  ai.py           # minimax/alphabeta, evaluation
-  coach.py        # explain/hint layer (threat checks, "hung piece" warnings)
-  cli.py          # interactive CLI
-tests/
-  test_rules.py
-  test_captures.py
-  test_ai_smoke.py
-docs/
-  RULES.md
-  DESIGN.md
+# AGENTS.md — Latrunculi Full Edition
 
-## Dev Workflow
-- Start each task by writing/confirming acceptance criteria.
-- Implement core rules first, then CLI, then tests, then AI, then coaching.
-- When uncertain, add a short note to docs/ (DESIGN.md or RULES.md).
+## Repo Contents
+- latrunculi_standard.html   — Classic 8v8 Latrunculi, no special pieces
+- latrunculi_dux.html        — Standard + Dux commander variant
+- latrunculi_full.html       — All variants combined (primary file)
 
-## Tooling
-- Python 3.11+
-- pytest
-- ruff (optional but encouraged)
-- mypy (optional)
+## Primary File
+Work on: latrunculi_full.html
+This is the flagship single-file app. All improvements go here.
 
-## Definition of Done
-- `pytest` passes
-- CLI can complete a full game without crashing
-- Capture rules validated by tests (edge cases included)
-- AI can play legal moves and finish games
-- Basic documentation exists
+## Game Variants (selectable in-game)
+Standard   — Pure Latrunculi. Rook-movement, custodial capture, no special pieces.
+Dux        — Adds one commander per side (e2/e7). Immune to sandwich; needs 4-surround.
+Gladiator  — Adds 6 diamond warriors per side (B1-G1 / B8-G8). Move diagonally.
+            Captured by diagonal Gladiator sandwich OR orthogonal round sandwich.
+            Orthogonal capture by rounds triggers optional promotion.
+Full       — All of the above simultaneously.
+
+## Coach Modes
+Spar     — Play vs AI. Choose difficulty Novice/Soldier/Tribune/Praetor (depth 1-4).
+Hint     — Danger squares glow red. Coach warns before risky moves, flags captures.
+Learn    — 6 structured lessons: capture geometry, danger squares, forks, gates,
+           tempo/mobility, endgame technique.
+Explain  — Click any move in history. Board replays position with color overlays:
+           blue=origin, green=destination, red=captured, gold=engine suggestion.
+           Coach explains why the move was good, bad, or missed an opportunity.
+Review   — Postgame after-action report. Surfaces forks, blunders, hung pieces,
+           missed captures. Displayed in win modal and Review tab.
+
+## AI Engine
+- Minimax + alpha-beta pruning.
+- Evaluation: material, mobility, bracketing threats, trapped pieces, Dux safety.
+- Dux safety term: penalizes 3-of-4 surround, rewards encircling enemy Dux.
+- AI auto-promotes Gladiators when earning the right.
+
+## Non-Negotiables
+1. All variants must work correctly. Rules are as specified in RULES.md v2.
+2. The Dux is only captured by 4-surround (NOT edge proximity).
+3. Gladiator diagonal captures require BOTH the mover AND anchor to be Gladiators.
+4. Orthogonal round captures of Gladiators always trigger promotion choice for human.
+5. Keep the file single-file HTML/CSS/JS. No build step. No frameworks.
+6. Pytest suite must stay green if rules.py is touched.
