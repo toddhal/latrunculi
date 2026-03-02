@@ -36,3 +36,47 @@ If a player to move has no legal moves, the game is terminal and the other playe
 - Files are `a` to `h` (left to right from White perspective).
 - Ranks are `1` to `8` (bottom to top).
 - CLI move input format: `e2 e5`.
+
+# Latrunculi_full v2 Rules
+
+UPDATED RULES (v2 — Full Edition)
+Board & Setup
+
+8×8 board. White moves first.
+Standard: 8 round pieces per side. White on rank 2, Black on rank 7.
+Dux: Standard + one Dux commander per side (placed at e2/e7).
+Gladiator: Standard + 6 Gladiator pieces per side (placed B1–G1 / B8–G8).
+Full: All of the above — rounds, Dux, and Gladiators.
+
+Round Pieces (⚪/🔴)
+
+Move like a rook: orthogonally, any number of empty squares, no jumping.
+Custodial capture: If after your move an enemy round piece is sandwiched between your piece and another of your pieces orthogonally (N/S or E/W), it is removed. Multiple captures can occur from a single move.
+
+The Dux ⚜ (Commander)
+
+One per side. Visually distinct with a crown glyph and glowing border.
+Moves identically to a round piece (rook-style, orthogonal).
+Immune to standard custodial capture — a simple sandwich does nothing.
+Captured only when surrounded on ALL 4 orthogonal sides simultaneously by enemy pieces. Board edges do NOT count as surrounds — you need 4 actual enemy pieces.
+The AI actively tries to encircle enemy Dux and protect its own.
+When a Dux reaches 3-of-4 sides surrounded, it pulses red as a warning.
+
+Gladiators ◆ (Diamond Warriors)
+
+Six per side. Rendered as rotated diamond shapes.
+Move diagonally only — like a bishop in chess, any number of empty squares.
+Block all friendly and enemy pieces' paths (pieces cannot pass through them).
+Captured two ways:
+
+Diagonal sandwich: Two friendly Gladiators sandwiching an enemy Gladiator along a diagonal line — the enemy Gladiator is removed.
+Orthogonal sandwich: Two enemy round pieces sandwiching a Gladiator orthogonally — the Gladiator is removed, and the capturing player earns a promotion choice.
+
+
+Promotion: When a round piece captures a Gladiator via orthogonal sandwich, the capturing player may optionally promote that round piece into a Gladiator. A modal pauses the game for the human's choice; AI always promotes.
+Gladiators cannot assist rounds in orthogonal captures and rounds cannot assist Gladiators in diagonal captures — the capture type is strict.
+
+Winning
+
+Opponent has zero pieces remaining, OR
+Opponent has zero legal moves at the start of their turn.
