@@ -586,6 +586,12 @@
   .lesson-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-light); letter-spacing: 0.05em; margin-bottom: 3px; }
   .lesson-body  { color: var(--cream-dim); font-size: 12.5px; }
 
+  .challenge-wrap { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(61,46,24,0.6); }
+  .challenge-head { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.18em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 8px; }
+  .challenge-btns { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .challenge-btn { width: 100%; margin-top: 0; padding: 8px 10px; font-size: 10px; }
+  .challenge-status { margin-top: 8px; font-size: 12px; color: var(--cream-dim); line-height: 1.4; min-height: 18px; }
+
   /* ── MOVE HISTORY ── */
   .history-list {
     max-height: 140px;
@@ -1178,6 +1184,11 @@
     <div class="panel-card hidden" id="lessons-card">
       <div class="card-title">Lessons</div>
       <div class="lesson-steps" id="lessons-area"></div>
+      <div class="challenge-wrap">
+        <div class="challenge-head">Training Challenges</div>
+        <div class="challenge-btns" id="challenge-area"></div>
+        <div class="challenge-status" id="challenge-status"></div>
+      </div>
     </div>
 
     <!-- HISTORY -->
@@ -1263,6 +1274,7 @@ function pieceOwner(p) {
 }
 function isDux(p)       { return p === WHITE_DUX  || p === BLACK_DUX;  }
 function isGladiator(p) { return p === WHITE_GLAD || p === BLACK_GLAD; }
+function isRound(p)     { return p === WHITE || p === BLACK; }
 function isFriendly(p, side) { return pieceOwner(p) === side; }
 function isEnemy(p, side)    { const o = pieceOwner(p); return o !== null && o !== side; }
 
@@ -1279,13 +1291,14 @@ let mode        = 'spar'; // spar | hint | learn | review
 let aiDepth     = 1;
 let aiSide      = BLACK;
 let gameOver    = false;
-let history     = [];     // [{move, cap, walkedInDanger, stateBefore}]
+let history     = [];     // [{player,src,dst,captures,walkedInDanger,stateBefore,stateAfter}]
 let stateHistory= [];     // full GameState snapshots, one per move (state BEFORE move)
 let moveNum     = 0;
 let totalCaps   = 0;
 let reviewLog   = [];     // {turn, type, msg}
 let coachMsgs   = [];
 let pendingPromotion = null; // { board, square, nextState } waiting for player choice
+let learnChallenge = null;   // {id,title,objective,variant,trainSide,maxMoves,startHistory,check,completed}
 
 function cloneBoard(b) { return b.map(r => [...r]); }
 
@@ -1402,15 +1415,17 @@ function applyMove(st, move) {
     if (!isEnemy(adjPiece, player)) continue;
     if (isDux(adjPiece)) continue;                    // Dux immune to sandwich
     if (!isFriendly(board[br][bc], player)) continue; // need friendly anchor
-    // Gladiator-on-Gladiator orthogonal: only if BOTH the mover and anchor are Gladiators
-    // Round capturing Gladiator: allowed, check for promotion
-    const anchorIsGlad = isGladiator(board[br][bc]);
-    const moverIsGlad  = isGladiator(movingPiece);
+    // Orthogonal Gladiator capture is a ROUND sandwich only:
+    // mover and anchor must both be regular round pieces (not Dux/Gladiator).
+    // This keeps diagonal Gladiator-vs-Gladiator capture distinct and makes
+    // promotion reward tightly coupled to round play.
+    const anchorIsRound = isRound(board[br][bc]);
+    const moverIsRound  = isRound(movingPiece);
     if (isGladiator(adjPiece)) {
-      // Gladiator can be captured orthogonally by rounds — no special restriction
+      if (!moverIsRound || !anchorIsRound) continue;
       board[ar][ac] = EMPTY; caps++;
       // Promotion opportunity: the piece that completed the sandwich is at [dr,dc]
-      if (!moverIsGlad) promotionSquare = [dr,dc];
+      promotionSquare = [dr,dc];
     } else {
       // Regular (non-Gladiator, non-Dux) enemy piece — normal capture
       board[ar][ac] = EMPTY; caps++;
@@ -2054,9 +2069,12 @@ function explainMove(idx) {
 // ════════════════════════════════════════════════════════════════
 function onCellClick(r, c) {
   if (gameOver) return;
-  if (state.toMove === aiSide && mode === 'spar') return; // AI's turn
+  if (state.toMove === aiSide && (mode === 'spar' || mode === 'hint')) return; // AI's turn
 
   const board = state.board;
+  if (mode==='learn' && learnChallenge && !learnChallenge.completed) {
+    if (pieceOwner(board[r][c]) !== null && pieceOwner(board[r][c]) !== learnChallenge.trainSide) return;
+  }
 
   if (selected) {
     const isTarget = legalCache.some(m => m.dst[0]===r && m.dst[1]===c);
@@ -2133,16 +2151,20 @@ function doMove(src, dst, aiControlled=false) {
 
   // Finalize the move with effects
   const finishMove = () => {
+    let promotionTriggeredNow = false;
     // Handle Gladiator promotion
     if (promotionSquare && (gameVariant==='gladiator'||gameVariant==='full')) {
       if (aiControlled) {
         const promoted = cloneBoard(ns.board);
+        promotionTriggeredNow = true;
         const [pr,pc] = promotionSquare;
         promoted[pr][pc] = player === WHITE ? WHITE_GLAD : BLACK_GLAD;
         state = makeState(promoted, ns.toMove);
       } else {
+        promotionTriggeredNow = true;
         pendingPromotion = { square: promotionSquare, nextState: ns, player };
         state = ns;
+        history[history.length - 1].stateAfter = { board: cloneBoard(state.board), toMove: state.toMove };
         selected = null; legalCache = [];
         renderState();
         document.getElementById('promo-sub').textContent =
@@ -2153,6 +2175,13 @@ function doMove(src, dst, aiControlled=false) {
     } else {
       state = ns;
     }
+
+    // Persist final post-move state (includes promotion outcomes) for robust undo.
+    if (mode==='learn' && learnChallenge && !learnChallenge.completed && player === learnChallenge.trainSide) {
+      state = makeState(cloneBoard(state.board), learnChallenge.trainSide);
+    }
+    history[history.length - 1].stateAfter = { board: cloneBoard(state.board), toMove: state.toMove };
+    trackLearnChallengeAfterMove(player, captures, promotionTriggeredNow);
 
     selected = null;
     legalCache = [];
@@ -2219,6 +2248,12 @@ function resolvePromotion(accept) {
     addCoachMsg({type:'info', text:`${player===WHITE?'White':'Black'} declines promotion.`});
   }
 
+  if (mode==='learn' && learnChallenge && !learnChallenge.completed && player === learnChallenge.trainSide) {
+    state = makeState(cloneBoard(state.board), learnChallenge.trainSide);
+  }
+  history[history.length - 1].stateAfter = { board: cloneBoard(state.board), toMove: state.toMove };
+  trackLearnChallengeAfterMove(player, 0, true);
+
   selected = null; legalCache = [];
   renderState();
 
@@ -2280,10 +2315,41 @@ function endGame(w) {
   document.getElementById('win-overlay').classList.remove('hidden');
 }
 
+function boardFromRows(rows) {
+  const b = Array.from({length:SIZE}, () => Array(SIZE).fill(EMPTY));
+  for (let r=0;r<SIZE;r++) {
+    for (let c=0;c<SIZE;c++) {
+      const ch = rows[r][c];
+      if (ch === 'W') b[r][c] = WHITE;
+      else if (ch === 'B') b[r][c] = BLACK;
+      else if (ch === 'D') b[r][c] = WHITE_DUX;
+      else if (ch === 'd') b[r][c] = BLACK_DUX;
+      else if (ch === 'G') b[r][c] = WHITE_GLAD;
+      else if (ch === 'g') b[r][c] = BLACK_GLAD;
+      else b[r][c] = EMPTY;
+    }
+  }
+  return b;
+}
+
+function resetLearnChallengeStatus() {
+  const el = document.getElementById('challenge-status');
+  if (el) el.textContent = '';
+}
+
+function updateLearnChallengeStatus(msg) {
+  const el = document.getElementById('challenge-status');
+  if (el) el.textContent = msg;
+}
+
 // ════════════════════════════════════════════════════════════════
 //  MODES
 // ════════════════════════════════════════════════════════════════
 const LESSONS = [
+  {
+    title: 'How to Play Latrunculi',
+    body:  'Goal: capture all enemy pieces or leave them with no legal moves. Rounds slide orthogonally across empty squares. Captures are custodial: an enemy between two of your pieces orthogonally is removed. Dux (⚜) is captured only by full 4-side surround. Gladiators (◆) slide diagonally; diagonal Gladiator capture requires Gladiator mover + anchor. Rounds can capture Gladiators orthogonally and may promote.'
+  },
   {
     title: 'Lesson 1: Capture Geometry',
     body:  'Custodial capture: place two of your pieces on opposite sides of an enemy orthogonally (N/S or E/W). That enemy piece is removed. You cannot capture diagonally.'
@@ -2318,6 +2384,154 @@ const LESSONS = [
   },
 ];
 
+const LEARN_CHALLENGES = [
+  {
+    id: 'cap2',
+    title: 'Challenge A: Two-step Capture',
+    objective: 'Capture both black pieces in at most 2 white moves.',
+    variant: 'standard',
+    trainSide: WHITE,
+    maxMoves: 2,
+    board: [
+      '........',
+      '........',
+      '.W..B.W.',
+      '........',
+      '........',
+      '.W..B.W.',
+      '........',
+      '........',
+    ],
+    check: (ctx) => ctx.capturesGained >= 2,
+  },
+  {
+    id: 'duxnet',
+    title: 'Challenge B: Finish the Encirclement',
+    objective: 'Capture the black Dux within 3 white moves.',
+    variant: 'dux',
+    trainSide: WHITE,
+    maxMoves: 3,
+    board: [
+      '........',
+      '........',
+      '..W.W...',
+      '...d....',
+      '....W...',
+      '..W.....',
+      '........',
+      '........',
+    ],
+    check: (ctx) => countPieces(ctx.state.board, BLACK) === 0 || !ctx.state.board.some(row => row.includes(BLACK_DUX)),
+  },
+  {
+    id: 'glad',
+    title: 'Challenge C: Round vs Gladiator',
+    objective: 'Use rounds to capture a Gladiator and trigger promotion within 2 white moves.',
+    variant: 'gladiator',
+    trainSide: WHITE,
+    maxMoves: 2,
+    board: [
+      '........',
+      '........',
+      '..W.g.W.',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+    ],
+    check: (ctx) => ctx.promotionTriggered,
+  },
+];
+
+function startLearnChallenge(id) {
+  const ch = LEARN_CHALLENGES.find(x => x.id === id);
+  if (!ch) return;
+
+  gameVariant = ch.variant;
+  document.querySelectorAll('.variant-btn').forEach(b => b.classList.toggle('active', b.dataset.variant===ch.variant));
+
+  state = makeState(boardFromRows(ch.board), ch.trainSide);
+  selected = null;
+  legalCache = [];
+  gameOver = false;
+  history = [];
+  stateHistory = [];
+  moveNum = 0;
+  totalCaps = 0;
+  lastMove = null;
+  pendingPromotion = null;
+  document.getElementById('history-list').innerHTML = '';
+  document.getElementById('promo-overlay').classList.add('hidden');
+  clearMoveArrow();
+  clearCoach();
+
+  learnChallenge = {
+    id: ch.id,
+    title: ch.title,
+    objective: ch.objective,
+    variant: ch.variant,
+    trainSide: ch.trainSide,
+    maxMoves: ch.maxMoves,
+    check: ch.check,
+    startHistory: 0,
+    movesUsed: 0,
+    capturesStart: 0,
+    promotionTriggered: false,
+    completed: false,
+  };
+
+  addCoachMsg({type:'lesson', text:`${ch.title} — ${ch.objective}`});
+  addCoachMsg({type:'info', text:`Training lock: only ${ch.trainSide===WHITE?'White':'Black'} pieces are movable in this drill.`});
+  updateLearnChallengeStatus(`Active: ${ch.title} (0/${ch.maxMoves} moves used)`);
+  renderState();
+}
+
+function buildLearnChallenges() {
+  const area = document.getElementById('challenge-area');
+  if (!area) return;
+  area.innerHTML = '';
+  LEARN_CHALLENGES.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'btn challenge-btn';
+    btn.textContent = ch.title;
+    btn.addEventListener('click', () => startLearnChallenge(ch.id));
+    area.appendChild(btn);
+  });
+}
+
+function trackLearnChallengeAfterMove(player, captures, promotionTriggeredNow) {
+  if (!learnChallenge || mode !== 'learn' || learnChallenge.completed) return;
+  if (player !== learnChallenge.trainSide) return;
+
+  learnChallenge.movesUsed++;
+  if (promotionTriggeredNow) learnChallenge.promotionTriggered = true;
+
+  const capsNow = history.reduce((sum, h) => sum + h.captures, 0);
+  const ctx = {
+    state,
+    capturesGained: capsNow - learnChallenge.capturesStart,
+    movesUsed: learnChallenge.movesUsed,
+    promotionTriggered: learnChallenge.promotionTriggered,
+  };
+
+  if (learnChallenge.check(ctx)) {
+    learnChallenge.completed = true;
+    updateLearnChallengeStatus(`Completed: ${learnChallenge.title} (${learnChallenge.movesUsed}/${learnChallenge.maxMoves} moves)`);
+    addCoachMsg({type:'good', text:`✅ Challenge complete: ${learnChallenge.title}`});
+    return;
+  }
+
+  if (learnChallenge.movesUsed >= learnChallenge.maxMoves) {
+    learnChallenge.completed = true;
+    updateLearnChallengeStatus(`Failed: move budget exceeded (${learnChallenge.maxMoves}). Reload challenge to retry.`);
+    addCoachMsg({type:'warn', text:`Challenge failed: ${learnChallenge.objective}`});
+    return;
+  }
+
+  updateLearnChallengeStatus(`Active: ${learnChallenge.title} (${learnChallenge.movesUsed}/${learnChallenge.maxMoves} moves used)`);
+}
+
 function buildLessons() {
   const area = document.getElementById('lessons-area');
   area.innerHTML = '';
@@ -2347,8 +2561,10 @@ function setMode(m) {
 
   clearCoach();
   if (m==='learn') {
-    addCoachMsg({type:'lesson', text:'Select a lesson below to read the principle. Play in any mode to practice.'});
+    addCoachMsg({type:'lesson', text:'Read the how-to primer, then launch a challenge. Challenges use move budgets so the lesson requires multi-step execution.'});
     buildLessons();
+    buildLearnChallenges();
+    if (!learnChallenge || learnChallenge.completed) resetLearnChallengeStatus();
   } else if (m==='hint') {
     addCoachMsg({type:'info', text:'Hint mode active. Danger squares glow red. Coach will warn before risky moves.'});
     renderState(); // re-render to show danger squares
@@ -2403,6 +2619,7 @@ function newGame() {
   reviewLog  = [];
   explainActive = null;
   pendingPromotion = null;
+  learnChallenge = null;
   moveNum    = 0;
   totalCaps  = 0;
   lastMove = null;
@@ -2410,6 +2627,7 @@ function newGame() {
   document.getElementById('promo-overlay').classList.add('hidden');
   document.getElementById('history-list').innerHTML = '';
   clearCoach();
+  resetLearnChallengeStatus();
   clearMoveArrow();
 
   const variantNames = {standard:'Standard',dux:'Dux',gladiator:'Gladiator',full:'Full (Dux + Gladiator)'};
@@ -2763,12 +2981,13 @@ function getCellFromPoint(x, y) {
 
 function onPointerDown(e) {
   if (gameOver) return;
-  if (state.toMove === aiSide && mode === 'spar') return;
+  if (state.toMove === aiSide && (mode === 'spar' || mode === 'hint')) return;
   if (e.button && e.button !== 0) return; // only left click / touch
 
   const cell = e.target.closest('.cell');
   if (!cell) return;
   const r = +cell.dataset.r, c = +cell.dataset.c;
+  if (mode==='learn' && learnChallenge && !learnChallenge.completed && pieceOwner(state.board[r][c]) !== learnChallenge.trainSide) return;
   if (pieceOwner(state.board[r][c]) !== state.toMove) return;
 
   const piece = cell.querySelector('.piece');
@@ -2904,24 +3123,42 @@ function updateMaterialBar() {
 // ════════════════════════════════════════════════════════════════
 function undoMove() {
   if (gameOver) return;
-  if (stateHistory.length < 2) return;
+  if (history.length === 0) return;
+
+  const pairedUndo = (mode==='spar' || mode==='hint') && history.length >= 2;
+  const undoCount = pairedUndo ? 2 : 1;
   playUndo();
-  // Pop AI move
-  stateHistory.pop(); history.pop();
-  // Pop player move
-  const prev = stateHistory.pop(); history.pop();
-  state = makeState(prev.board, prev.toMove);
-  moveNum = Math.max(0, moveNum - 2);
+
+  for (let i=0;i<undoCount && history.length>0;i++) {
+    stateHistory.pop();
+    history.pop();
+  }
+
+  const last = history[history.length - 1];
+  if (last && last.stateAfter) {
+    state = makeState(cloneBoard(last.stateAfter.board), last.stateAfter.toMove);
+  } else {
+    state = makeState(initialBoard(), WHITE);
+  }
+
+  moveNum = Math.max(0, moveNum - undoCount);
+  totalCaps = history.reduce((sum, h) => sum + h.captures, 0);
   selected = null;
   legalCache = [];
-  lastMove = null;
+  lastMove = history.length ? { src: history[history.length-1].src, dst: history[history.length-1].dst } : null;
+  pendingPromotion = null;
+  document.getElementById('promo-overlay').classList.add('hidden');
+
   clearMoveArrow();
   renderState();
+
   const h = document.getElementById('history-list');
-  const items = h.querySelectorAll('.history-item');
-  if (items.length) items[items.length-1].remove();
-  addCoachMsg({type:'info', text:'Move undone. Your turn again.'});
+  h.innerHTML = '';
+  for (const m of history) addHistory(m.player, m.src, m.dst, m.captures);
+
+  addCoachMsg({type:'info', text:`Move undone (${undoCount===2?'player + AI':'single move'}).`});
 }
+
 
 function chooseSide(side) {
   aiSide = side === 'W' ? BLACK : WHITE;
