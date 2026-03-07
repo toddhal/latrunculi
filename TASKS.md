@@ -1,22 +1,26 @@
 # TASKS.md — Current Mission
 
-## Active Task: Step 1 — Project Scaffolding
+## Active Task: Step 2 — Engine Extraction
 
-Set up the React project using Vite inside this repo.
+Read latrunculi_full.html and extract all pure game logic into 
+separate files inside latrunculi-react/src/engine/
 
-### Steps
-1. Run this command to create the project:
-   `npm create vite@latest latrunculi-react -- --template react`
-2. cd into latrunculi-react and run `npm install`
-3. Install Tailwind: `npm install -D tailwindcss postcss autoprefixer`
-4. Run: `npx tailwindcss init -p`
-5. Start the dev server: `npm run dev`
+### Files to Create
+1. `src/engine/constants.js` — EMPTY, WHITE, BLACK, WD, BD, WG, BG, DIRS, DIAG_DIRS
+2. `src/engine/rules.js` — legalMoves, applyMove, winner, isLegalMove
+3. `src/engine/ai.js` — minimax, evaluate, chooseMove
+4. `src/engine/coach.js` — getDangerSquares, coachTurnAnalysis, explainMove
+
+### Rules
+- Pure JS only. Zero React imports. Zero DOM references.
+- Copy logic faithfully from latrunculi_full.html — do not simplify or rewrite rules.
+- Each file gets a comment at the top explaining what it does.
 
 ### Done When
-- A folder called `latrunculi-react` exists in the repo
-- `npm run dev` launches a React app in the browser
-- No errors in the terminal
+- All 4 files exist in src/engine/
+- Each file can be imported without errors
+- No DOM or React references anywhere in engine/
 
 ### Do NOT
-- Touch latrunculi_full.html
-- Start on engine extraction yet — that is Step 2
+- Modify latrunculi_full.html
+- Start building components yet — that is Step 3
