@@ -1,18 +1,24 @@
-# latrunculi
+# Latrunculi
 
-Playable Latrunculi (v1) prototype in Python with:
-- Rules engine (movement, custodial capture, terminal detection)
-- CLI gameplay
-- Basic AI opponent (minimax + alpha-beta)
-- Pytest suite and CI
+Ancient Roman strategy board game — full implementation with AI, coaching system, and four game variants.
 
-## Quick start
-```bash
-python -m pytest
-python -m latrunculi.cli
-python -m latrunculi.cli --vs-ai --ai-side B --depth 2
-```
+## Status
+- ✅ Python CLI version (rules engine, minimax AI, pytest suite)
+- ✅ HTML/JS web version (latrunculi_full.html — source of truth)
+- 🔄 React web app conversion in progress (see REACT_ROADMAP.md)
+- 📋 React Native / iOS app (planned)
 
 ## Docs
-- Rules: `docs/RULES.md`
-- Design: `docs/DESIGN.md`
+- Project overview: `PROJECT_OVERVIEW.md`
+- React conversion plan: `REACT_ROADMAP.md`
+- Current progress: `PROGRESS_TRACKER.md`
+- Active task: `TASKS.md`
+```
+
+Save it. ✅
+
+---
+
+Now — go to your Claude Code terminal and type exactly this:
+```
+Read CLAUDE.md, then TASKS.md, then complete the active task.
